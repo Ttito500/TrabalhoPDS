@@ -1,0 +1,161 @@
+@startuml monopoly
+class Game {
+    - instance : Game
+    - players : List<Player>
+    - board : Board
+    - dice : Dice
+    - currentPlayerIndex : int
+    + getInstance() : Game
+    + addPlayer(player : Player) : void
+    + startGame() : void
+    + playTurn() : void
+    + getCurrentPlayer() : Player
+    + getBoard() : Board
+    + rollDice() : int
+    + nextPlayer() : void
+    + isGameOver() : boolean
+    + getWinner() : Player
+    - Game()
+}
+
+class Board {
+    - spaces : List<Space>
+    + Board(spaceFactory : SpaceFactory)
+    + getSpace(position : int) : Space
+    + getSpaceCount() : int
+}
+
+abstract class Space {
+    - name : String
+    + Space(name : String)
+    + getName() : String
+    + landOn(player : Player, game : Game) : void
+    + toString() : String
+}
+
+class Property extends Space {
+    - purchaseValue : double
+    - rentValue : double
+    - owner : Player
+    + Property(name : String, purchaseValue : double, rentValue : double)
+    + getPurchaseValue() : double
+    + getRentValue() : double
+    + getOwner() : Player
+    + setOwner(owner : Player) : void
+    + landOn(player : Player, game : Game) : void
+    + isOwned() : boolean
+}
+
+class Company extends Space {
+    - purchaseValue : double
+    - rentStrategy : RentStrategy
+    - owner : Player
+    + Company(name : String, purchaseValue : double, rentStrategy : RentStrategy)
+    + getPurchaseValue() : double
+    + getRentValue(diceValue : int) : double
+    + getOwner() : Player
+    + setOwner(owner : Player) : void
+    + setRentStrategy(rentStrategy : RentStrategy) : void
+    + landOn(player : Player, game : Game) : void
+    + isOwned() : boolean
+}
+
+class SpecialPlace extends Space {
+    - action : SpecialAction
+    + SpecialPlace(name : String, action : SpecialAction)
+    + landOn(player : Player, game : Game) : void
+}
+
+interface RentStrategy {
+    + calculateRent(diceValue : int) : double
+}
+
+class FixedRentStrategy implements RentStrategy {
+    - fixedRent : double
+    + FixedRentStrategy(fixedRent : double)
+    + calculateRent(diceValue : int) : double
+}
+
+class VariableRentStrategy implements RentStrategy {
+    - rentMultiplier : double
+    + VariableRentStrategy(rentMultiplier : double)
+    + calculateRent(diceValue : int) : double
+}
+
+interface SpecialAction {
+    + execute(player : Player, game : Game) : void
+}
+
+class GoToJailAction implements SpecialAction {
+    + execute(player : Player, game : Game) : void
+}
+
+class ReceiveMoneyAction implements SpecialAction {
+    - amount : double
+    + ReceiveMoneyAction(amount : double)
+    + execute(player : Player, game : Game) : void
+}
+
+class Player {
+    - name : String
+    - balance : double
+    - properties : List<Property>
+    - companies : List<Company>
+    - position : int
+    + Player(name : String, initialBalance : double)
+    + getName() : String
+    + getBalance() : double
+    + getProperties() : List<Property>
+    + getCompanies() : List<Company>
+    + getPosition() : int
+    + setPosition(position : int) : void
+    + receiveMoney(amount : double) : void
+    + payMoney(amount : double) : boolean
+    + addProperty(property : Property) : void
+    + addCompany(company : Company) : void
+    + displayPortfolio() : void
+    + move(diceValue : int, board : Board) : void
+}
+
+class Portfolio {
+    - balance : double
+    - properties : List<Property>
+    - companies : List<Company>
+    + Portfolio(initialBalance : double)
+    + getBalance() : double
+    + getProperties() : List<Property>
+    + getCompanies() : List<Company>
+    + deposit(amount : double) : void
+    + withdraw(amount : double) : boolean
+    + addProperty(property : Property) : void
+    + addCompany(company : Company) : void
+    + display() : void
+}
+
+class Dice {
+    + roll() : int
+}
+
+class SpaceFactory {
+    + createSpace(type : String, name : String, ...args) : Space
+}
+
+
+Game -- Board
+Game -- Player
+Game -- Dice
+Game -- SpaceFactory
+Board -- Space
+Space <|-- Property
+Space <|-- Company
+Space <|-- SpecialPlace
+Company -- RentStrategy
+SpecialPlace -- SpecialAction
+Player -- Portfolio
+Player --|> Observer
+
+note top of Game : Singleton Pattern
+note top of SpaceFactory : Factory Pattern
+note top of Company : Strategy Pattern (RentStrategy)
+note top of SpecialPlace : Decorator Pattern (SpecialAction - could be decorator or strategy, chosen decorator for actions)
+@enduml
